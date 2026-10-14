@@ -117,29 +117,19 @@ def get_user(user_id):
         return dict(row) if row else None
 
 
-def inventory(user_id):
-    with closing(db()) as con:
-        rows = con.execute(
-            """
-            SELECT id, card_id, acquired_at
-            FROM inventory
-            WHERE user_id = %s
-            ORDER BY id DESC
-            """,
-            (user_id,)
-        ).fetchall()
+def inventory(user_id): with closing(db()) as con: rows = con.execute( """ SELECT id, card_id, acquired_at FROM inventory WHERE user_id = %s ORDER BY id DESC """, (user_id,) ).fetchall()
+cards = []
+for row in rows:
+    card = CARD_MAP.get(row['card_id'])
+    if card:
+        cards.append({
+            **card,
+            'id': row['id'],
+            'inventory_id': row['id'],
+            'acquired_at': row['acquired_at']
+        })
 
-    cards = []
-    for row in rows:
-        card = CARD_MAP.get(row['card_id'])
-        if card:
-            cards.append({
-                **card,
-                'inventory_id': row['id'],
-                'acquired_at': row['acquired_at']
-            })
-
-    return cards
+return cards
 
 def pick_card():
     rarity = random.choices([r[0] for r in RARITY_WEIGHTS], weights=[r[1] for r in RARITY_WEIGHTS], k=1)[0]
