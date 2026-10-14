@@ -324,7 +324,7 @@ def ensure_user(user_id: int, username: str = ""):
                 ON CONFLICT (user_id) DO NOTHING
             """, (user_id,))
          
-      conn.commit()
+        conn.commit()
 
 def get_user(user_id: int):
     with closing(db()) as conn:
@@ -738,19 +738,6 @@ if dp:
 
         parts = (message.text or "").split()
 
-        if len(parts) != 4:
-            await message.answer(
-                "Создание промокода на карточку:\n"
-                "<code>/promo_card КОД CARD_ID МАКС_АКТИВАЦИЙ ЧАСЫ</code>\n\n"
-                "Пример: <code>/promo_card GPU gpu_rtx3060 20 48</code>\n\n"
-                "Доступные карточки:\n"
-                + "\n".join(
-                    f"<code>{card['id']}</code> — {card['name']}"
-                    for card in CARDS
-                )
-            )
-            return
-
         # Формат команды:
         # /promo_card КОД CARD_ID МАКС_АКТИВАЦИЙ ЧАСЫ
         # Поэтому ожидается 5 элементов вместе с командой.
@@ -1065,7 +1052,7 @@ async def api_state(request: Request):
     uid = auth_user(request)
     return JSONResponse(state_for(uid))
 
-"/api/drop"
+@app.post("/api/drop")
 async def api_drop(request: Request):
     uid = auth_user(request)
     now = int(time.time())
@@ -1121,7 +1108,7 @@ async def api_drop(request: Request):
         "state": state_for(uid),
     })
 
-"/api/sell/{inv_id}"
+@app.post("/api/sell/{inv_id}")
 async def api_sell(inv_id: int, request: Request):
     uid = auth_user(request)
 
@@ -1170,7 +1157,7 @@ async def api_sell(inv_id: int, request: Request):
         "state": state_for(uid),
     })
 
-"/api/daily"
+@app.post("/api/daily")
 async def api_daily(request: Request):
     uid = auth_user(request)
     now = int(time.time())
@@ -1215,7 +1202,7 @@ async def api_daily(request: Request):
         "state": state_for(uid),
     })
 
-"/api/build"
+@app.post("/api/build")
 async def api_build(request: Request):
     uid = auth_user(request)
 
@@ -1233,7 +1220,7 @@ async def api_build(request: Request):
         )
 
     owned_cards = inventory(uid)
-    owned_ids = {item["card_id"] for item in owned_cards}
+    owned_ids = {item["id"] for item in owned_cards}
 
     for component_type, card_id in selected.items():
         if not isinstance(card_id, str):
