@@ -13,10 +13,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-BASE_DIR = Path(file).parent
+BASE_DIR = Path(__file__).parent
 DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 BOT_TOKEN = os.getenv('BOT_TOKEN', '').strip()
-PUBLIC_URL = os.getenv('PUBLIC_URL', '').strip().rstrip('/'
+PUBLIC_URL = os.getenv('PUBLIC_URL', '').strip().rstrip('/')
 
 app = FastAPI(title='PC DROP')
 app.mount('/web', StaticFiles(directory=BASE_DIR / 'web'), name='web')
@@ -44,13 +44,6 @@ CARDS = [
 RARITY_WEIGHTS = [("Обычная",45),("Необычная",27),("Редкая",16),("Эпическая",8),("Легендарная",3.5),("Мифическая",0.5)]
 RARITY_COLORS = {"Обычная":"#9ca3af","Необычная":"#58c98b","Редкая":"#55a7ff","Эпическая":"#b28cff","Легендарная":"#ffbf59","Мифическая":"#ff68ce"}
 CARD_MAP = {c['id']: c for c in CARDS}
-
-
-def db():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    return con
-
 
 def db():
     if not DATABASE_URL:
@@ -135,7 +128,18 @@ def inventory(user_id):
             """,
             (user_id,)
         ).fetchall()
-        return [dict(row) for row in rows]
+
+    cards = []
+    for row in rows:
+        card = CARD_MAP.get(row['card_id'])
+        if card:
+            cards.append({
+                **card,
+                'inventory_id': row['id'],
+                'acquired_at': row['acquired_at']
+            })
+
+    return cards
 
 def pick_card():
     rarity = random.choices([r[0] for r in RARITY_WEIGHTS], weights=[r[1] for r in RARITY_WEIGHTS], k=1)[0]
@@ -186,13 +190,18 @@ async def drop_cmd(message: Message):
         return
     card=pick_card(); add_card(message.from_user.id,card['id'])
     with closing(db()) as con:
-       con.execute(
-    'UPDATE users SET last_drop=%s WHERE user_id=%s',
-    (now, message.from_user.id)
-)
-con.commit()
-    await message.answer(f"🎁 <b>Дроп получен!</b>\n\n{card['name']}\nТип: {card['type']}\nРедкость: <b>{card['rarity']}</b>\nСила: {card['power']}\n\nОткрой /inventory, чтобы посмотреть карточки.")
+        con.execute(
+            'UPDATE users SET last_drop=%s WHERE user_id=%s',
+            (now, message.from_user.id)
+        )
+        con.commit()
 
+    await message.answer(
+        f"🎁 <b>Дроп получен!</b>\n\n{card['name']}\n"
+        f"Тип: {card['type']}\nРедкость: <b>{card['rarity']}</b>\n"
+        f"Сила: {card['power']}\n\n"
+        "Открой /inventory, чтобы посмотреть карточки."
+    )
 
 @dp.message(Command('inventory'))
 async def inventory_cmd(message: Message):
