@@ -657,7 +657,7 @@ if dp:
 
         parts = (message.text or "").split()
 
-        if len(parts) != 4:
+        if len(parts) != 5:
             await message.answer(
                 "Создание промокода на монеты:\n"
                 "<code>/promo_coins КОД МОНЕТЫ МАКС_АКТИВАЦИЙ ЧАСЫ</code>\n\n"
