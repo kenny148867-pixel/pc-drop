@@ -280,3 +280,5 @@ async def shutdown():
     task=getattr(app.state,'bot_task',None)
     if task: task.cancel()
     if bot: await bot.session.close()
+
+psycopg[binary]
