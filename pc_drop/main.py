@@ -1,4 +1,6 @@
-import os, json, random, sqlite3, time
+import os, json, random, time
+import psycopg
+from psycopg.rows import dict_row
 from pathlib import Path
 from contextlib import closing
 from fastapi import FastAPI, Request, HTTPException
@@ -11,10 +13,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-BASE_DIR = Path(__file__).parent
-DB_PATH = os.getenv('DATABASE_PATH', str(BASE_DIR / 'pc_drop.sqlite3'))
+BASE_DIR = Path(file).parent
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 BOT_TOKEN = os.getenv('BOT_TOKEN', '').strip()
-PUBLIC_URL = os.getenv('PUBLIC_URL', '').strip().rstrip('/')
+PUBLIC_URL = os.getenv('PUBLIC_URL', '').strip().rstrip('/'
 
 app = FastAPI(title='PC DROP')
 app.mount('/web', StaticFiles(directory=BASE_DIR / 'web'), name='web')
@@ -50,42 +52,90 @@ def db():
     return con
 
 
+def db():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not configured")
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
+
+
 def init_db():
     with closing(db()) as con:
-        con.executescript('''
-        CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY, username TEXT, balance INTEGER NOT NULL DEFAULT 500, last_drop INTEGER NOT NULL DEFAULT 0, last_daily INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);
-        CREATE TABLE IF NOT EXISTS inventory(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, card_id TEXT NOT NULL, acquired_at INTEGER NOT NULL);
-        CREATE TABLE IF NOT EXISTS builds(user_id INTEGER PRIMARY KEY, selected TEXT NOT NULL DEFAULT '{}');
-        ''')
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id BIGINT PRIMARY KEY,
+                username TEXT,
+                balance BIGINT NOT NULL DEFAULT 500,
+                last_drop BIGINT NOT NULL DEFAULT 0,
+                last_daily BIGINT NOT NULL DEFAULT 0,
+                created_at BIGINT NOT NULL
+            )
+        """)
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS inventory (
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                card_id TEXT NOT NULL,
+                acquired_at BIGINT NOT NULL
+            )
+        """)
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS builds (
+                user_id BIGINT PRIMARY KEY,
+                selected TEXT NOT NULL DEFAULT '{}'
+            )
+        """)
         con.commit()
+
 
 init_db()
 
 
-def ensure_user(user_id, username=''):
+def ensure_user(user_id, username):
     with closing(db()) as con:
-        con.execute('INSERT OR IGNORE INTO users(user_id,username,created_at) VALUES(?,?,?)',(user_id, username or '', int(time.time())))
-        con.execute('UPDATE users SET username=? WHERE user_id=?',(username or '',user_id))
-        con.execute('INSERT OR IGNORE INTO builds(user_id,selected) VALUES(?,?)',(user_id,'{}'))
+        con.execute(
+            """
+            INSERT INTO users (user_id, username, created_at)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id) DO NOTHING
+            """,
+            (user_id, username, int(time.time()))
+        )
+        con.execute(
+            "UPDATE users SET username = %s WHERE user_id = %s",
+            (username, user_id)
+        )
+        con.execute(
+            """
+            INSERT INTO builds (user_id, selected)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id) DO NOTHING
+            """,
+            (user_id, '{}')
+        )
         con.commit()
 
 
 def get_user(user_id):
     with closing(db()) as con:
-        row = con.execute('SELECT * FROM users WHERE user_id=?',(user_id,)).fetchone()
+        row = con.execute(
+            "SELECT * FROM users WHERE user_id = %s",
+            (user_id,)
+        ).fetchone()
         return dict(row) if row else None
 
 
 def inventory(user_id):
     with closing(db()) as con:
-        rows = con.execute('SELECT id,card_id,acquired_at FROM inventory WHERE user_id=? ORDER BY id DESC',(user_id,)).fetchall()
-    result=[]
-    for r in rows:
-        card=CARD_MAP.get(r['card_id'])
-        if card:
-            result.append({**card,'inventory_id':r['id'],'acquired_at':r['acquired_at']})
-    return result
-
+        rows = con.execute(
+            """
+            SELECT id, card_id, acquired_at
+            FROM inventory
+            WHERE user_id = %s
+            ORDER BY id DESC
+            """,
+            (user_id,)
+        ).fetchall()
+        return [dict(row) for row in rows]
 
 def pick_card():
     rarity = random.choices([r[0] for r in RARITY_WEIGHTS], weights=[r[1] for r in RARITY_WEIGHTS], k=1)[0]
@@ -95,9 +145,14 @@ def pick_card():
 
 def add_card(user_id, card_id):
     with closing(db()) as con:
-        con.execute('INSERT INTO inventory(user_id,card_id,acquired_at) VALUES(?,?,?)',(user_id,card_id,int(time.time())))
+        con.execute(
+            """
+            INSERT INTO inventory (user_id, card_id, acquired_at)
+            VALUES (%s, %s, %s)
+            """,
+            (user_id, card_id, int(time.time()))
+        )
         con.commit()
-
 
 def web_keyboard():
     url = PUBLIC_URL + '/' if PUBLIC_URL else ''
@@ -131,7 +186,11 @@ async def drop_cmd(message: Message):
         return
     card=pick_card(); add_card(message.from_user.id,card['id'])
     with closing(db()) as con:
-        con.execute('UPDATE users SET last_drop=? WHERE user_id=?',(now,message.from_user.id)); con.commit()
+       con.execute(
+    'UPDATE users SET last_drop=%s WHERE user_id=%s',
+    (now, message.from_user.id)
+)
+con.commit()
     await message.answer(f"🎁 <b>Дроп получен!</b>\n\n{card['name']}\nТип: {card['type']}\nРедкость: <b>{card['rarity']}</b>\nСила: {card['power']}\n\nОткрой /inventory, чтобы посмотреть карточки.")
 
 
@@ -151,18 +210,38 @@ async def inventory_cmd(message: Message):
 @dp.message(Command('sell'))
 async def sell_cmd(message: Message):
     ensure_user(message.from_user.id, message.from_user.username or '')
-    parts=(message.text or '').split()
-    if len(parts)!=2 or not parts[1].isdigit():
-        await message.answer('Укажи номер карточки из инвентаря: <code>/sell 12</code>'); return
-    inv_id=int(parts[1])
+    parts = (message.text or '').split()
+
+    if len(parts) != 2 or not parts[1].isdigit():
+        await message.answer(
+            'Укажи номер карточки из инвентаря: <code>/sell 12</code>'
+        )
+        return
+
+    inv_id = int(parts[1])
+
     with closing(db()) as con:
-        row=con.execute('SELECT id,card_id FROM inventory WHERE id=? AND user_id=?',(inv_id,message.from_user.id)).fetchone()
+        row = con.execute(
+            'SELECT id, card_id FROM inventory WHERE id=%s AND user_id=%s',
+            (inv_id, message.from_user.id)
+        ).fetchone()
+
         if not row:
-            await message.answer('Не нашёл такую карточку в твоём инвентаре.'); return
-        card=CARD_MAP[row['card_id']]
-        con.execute('DELETE FROM inventory WHERE id=?',(inv_id,))
-        con.execute('UPDATE users SET balance=balance+? WHERE user_id=?',(card['price'],message.from_user.id)); con.commit()
-    await message.answer(f"💰 Продано: {card['name']}\nНачислено: <b>{card['price']} ₵</b>")
+            await message.answer('Не нашёл такую карточку в твоём инвентаре.')
+            return
+
+        card = CARD_MAP[row['card_id']]
+
+        con.execute('DELETE FROM inventory WHERE id=%s', (inv_id,))
+        con.execute(
+            'UPDATE users SET balance=balance+%s WHERE user_id=%s',
+            (card['price'], message.from_user.id)
+        )
+        con.commit()
+
+    await message.answer(
+        f"💰 Продано: {card['name']}\nНачислено: <b>{card['price']} ₵</b>"
+    )
 
 
 @dp.message(Command('balance'))
@@ -175,12 +254,24 @@ async def balance_cmd(message: Message):
 @dp.message(Command('daily'))
 async def daily_cmd(message: Message):
     ensure_user(message.from_user.id, message.from_user.username or '')
-    now=int(time.time()); u=get_user(message.from_user.id)
-    if now-u['last_daily']<86400:
-        left=86400-(now-u['last_daily'])
-        await message.answer(f"📅 Награда уже получена. Возвращайся через {left//3600} ч {(left%3600)//60} мин."); return
+    now = int(time.time())
+    u = get_user(message.from_user.id)
+
+    if now - u['last_daily'] < 86400:
+        left = 86400 - (now - u['last_daily'])
+        await message.answer(
+            f"📅 Награда уже получена. Возвращайся через "
+            f"{left//3600} ч {(left%3600)//60} мин."
+        )
+        return
+
     with closing(db()) as con:
-        con.execute('UPDATE users SET balance=balance+250,last_daily=? WHERE user_id=?',(now,message.from_user.id)); con.commit()
+        con.execute(
+            'UPDATE users SET balance=balance+250, last_daily=%s WHERE user_id=%s',
+            (now, message.from_user.id)
+        )
+        con.commit()
+
     await message.answer('🎉 Ежедневная награда: <b>+250 ₵</b>')
 
 
@@ -213,56 +304,144 @@ async def root():
 
 @app.get('/api/state')
 async def api_state(request: Request):
-    uid=auth_user(request); u=get_user(uid); cards=inventory(uid)
-    with closing(db()) as con:
-        b=con.execute('SELECT selected FROM builds WHERE user_id=?',(uid,)).fetchone()
-    return {'user':{'id':uid,'balance':u['balance'],'last_drop':u['last_drop'],'last_daily':u['last_daily']},'inventory':cards,'catalog':CARDS,'build':json.loads(b['selected'] or '{}')}
+    uid = auth_user(request)
+    u = get_user(uid)
+    cards = inventory(uid)
 
+    with closing(db()) as con:
+        b = con.execute(
+            'SELECT selected FROM builds WHERE user_id=%s',
+            (uid,)
+        ).fetchone()
+
+    return {
+        'user': {
+            'id': uid,
+            'balance': u['balance'],
+            'last_drop': u['last_drop'],
+            'last_daily': u['last_daily']
+        },
+        'inventory': cards,
+        'catalog': CARDS,
+        'build': json.loads(b['selected'] or '{}')
+    }
+    
 @app.post('/api/drop')
 async def api_drop(request: Request):
-    uid=auth_user(request); now=int(time.time()); u=get_user(uid); wait=10800-(now-u['last_drop'])
-    if wait>0: raise HTTPException(429,f'Следующий дроп будет доступен через {wait//3600} ч {(wait%3600)//60} мин.')
-    card=pick_card(); add_card(uid,card['id'])
-    with closing(db()) as con:
-        con.execute('UPDATE users SET last_drop=? WHERE user_id=?',(now,uid)); con.commit()
-    return {'card':card,'state':await state_for(uid)}
+    uid = auth_user(request)
+    now = int(time.time())
+    u = get_user(uid)
+    wait = 10800 - (now - u['last_drop'])
 
+    if wait > 0:
+        raise HTTPException(
+            429,
+            f'Следующий дроп будет доступен через '
+            f'{wait//3600} ч {(wait%3600)//60} мин.'
+        )
+
+    card = pick_card()
+    add_card(uid, card['id'])
+
+    with closing(db()) as con:
+        con.execute(
+            'UPDATE users SET last_drop=%s WHERE user_id=%s',
+            (now, uid)
+        )
+        con.commit()
+
+    return {'card': card, 'state': await state_for(uid)}
+    
 async def state_for(uid):
-    u=get_user(uid)
-    with closing(db()) as con:
-        b=con.execute('SELECT selected FROM builds WHERE user_id=?',(uid,)).fetchone()
-    return {'user':{'id':uid,'balance':u['balance'],'last_drop':u['last_drop'],'last_daily':u['last_daily']},'inventory':inventory(uid),'catalog':CARDS,'build':json.loads(b['selected'] or '{}')}
+    u = get_user(uid)
 
+    with closing(db()) as con:
+        b = con.execute(
+            'SELECT selected FROM builds WHERE user_id=%s',
+            (uid,)
+        ).fetchone()
+
+    return {
+        'user': {
+            'id': uid,
+            'balance': u['balance'],
+            'last_drop': u['last_drop'],
+            'last_daily': u['last_daily']
+        },
+        'inventory': inventory(uid),
+        'catalog': CARDS,
+        'build': json.loads(b['selected'] or '{}')
+    }
+    
 @app.post('/api/sell/{inv_id}')
 async def api_sell(inv_id: int, request: Request):
-    uid=auth_user(request)
+    uid = auth_user(request)
+
     with closing(db()) as con:
-        row=con.execute('SELECT id,card_id FROM inventory WHERE id=? AND user_id=?',(inv_id,uid)).fetchone()
-        if not row: raise HTTPException(404,'Карточка не найдена')
-        card=CARD_MAP[row['card_id']]
-        con.execute('DELETE FROM inventory WHERE id=?',(inv_id,))
-        con.execute('UPDATE users SET balance=balance+? WHERE user_id=?',(card['price'],uid)); con.commit()
+        row = con.execute(
+            'SELECT id, card_id FROM inventory WHERE id=%s AND user_id=%s',
+            (inv_id, uid)
+        ).fetchone()
+
+        if not row:
+            raise HTTPException(404, 'Карточка не найдена')
+
+        card = CARD_MAP[row['card_id']]
+
+        con.execute(
+            'DELETE FROM inventory WHERE id=%s',
+            (inv_id,)
+        )
+        con.execute(
+            'UPDATE users SET balance=balance+%s WHERE user_id=%s',
+            (card['price'], uid)
+        )
+        con.commit()
+
     return await state_for(uid)
 
 @app.post('/api/daily')
 async def api_daily(request: Request):
-    uid=auth_user(request); now=int(time.time()); u=get_user(uid)
-    if now-u['last_daily']<86400: raise HTTPException(429,'Ежедневная награда уже получена.')
-    with closing(db()) as con:
-        con.execute('UPDATE users SET balance=balance+250,last_daily=? WHERE user_id=?',(now,uid)); con.commit()
-    return await state_for(uid)
+    uid = auth_user(request)
+    now = int(time.time())
+    u = get_user(uid)
 
+    if now - u['last_daily'] < 86400:
+        raise HTTPException(429, 'Ежедневная награда уже получена.')
+
+    with closing(db()) as con:
+        con.execute(
+            'UPDATE users SET balance=balance+250, last_daily=%s WHERE user_id=%s',
+            (now, uid)
+        )
+        con.commit()
+
+    return await state_for(uid)
+    
 @app.post('/api/build')
 async def api_build(request: Request):
-    uid=auth_user(request); body=await request.json(); selected=body.get('selected',{})
-    if not isinstance(selected,dict): raise HTTPException(400,'Неверная сборка')
-    owned={str(c['inventory_id']):c for c in inventory(uid)}
-    valid={}
+    uid = auth_user(request)
+    body = await request.json()
+    selected = body.get('selected', {})
+
+    if not isinstance(selected, dict):
+        raise HTTPException(400, 'Неверная сборка')
+
+    owned = {str(c['inventory_id']): c for c in inventory(uid)}
+    valid = {}
+
     for slot, inv_id in selected.items():
-        c=owned.get(str(inv_id))
-        if c: valid[slot]=str(inv_id)
+        c = owned.get(str(inv_id))
+        if c:
+            valid[slot] = str(inv_id)
+
     with closing(db()) as con:
-        con.execute('UPDATE builds SET selected=? WHERE user_id=?',(json.dumps(valid),uid)); con.commit()
+        con.execute(
+            'UPDATE builds SET selected=%s WHERE user_id=%s',
+            (json.dumps(valid), uid)
+        )
+        con.commit()
+
     return await state_for(uid)
 
 async def run_bot():
