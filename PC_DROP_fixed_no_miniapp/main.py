@@ -215,6 +215,13 @@ def inventory(user_id: int):
 
     return result
     
+RARITY_WEIGHTS = {
+    "common": 60,
+    "rare": 25,
+    "epic": 10,
+    "legendary": 4,
+    "ultra_legendary": 1
+}    
 ULTRA_CARD_ID = "gpu_rx580_mined"
 ULTRA_DROP_CHANCE = 0.001
 
