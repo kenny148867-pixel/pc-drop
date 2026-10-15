@@ -309,11 +309,11 @@ if dp:
         builds = state_for(user.id)["build"]
         name = (user.full_name or user.username or "Игрок").replace("<", "").replace(">", "")
         await message.answer(
-            f"👤 <b>Профиль {name}</b>\\n\\n"
-            f"🆔 ID: <code>{user.id}</code>\\n"
-            f"⭐ Уровень: 1\\n"
-            f"💰 Монеты: {row['balance']}\\n"
-            f"🃏 Карточек: {len(items)}\\n"
+            f"👤 <b>Профиль {name}</b>\n\n"
+            f"🆔 ID: <code>{user.id}</code>\n"
+            f"⭐ Уровень: 1\n"
+            f"💰 Монеты: {row['balance']}\n"
+            f"🃏 Карточек: {len(items)}\n"
             f"🖥️ Выбрано компонентов: {len(builds)}",
         )
 
@@ -325,7 +325,7 @@ if dp:
         selected = state["build"]
         if not selected:
             await message.answer(
-                "🖥️ <b>Твой ПК пока не собран.</b>\\n"
+                "🖥️ <b>Твой ПК пока не собран.</b>\n"
                 "Сначала получи комплектующие через /drop, затем собери свой ПК командой /build.",
                 reply_markup=main_keyboard(),
             )
@@ -338,7 +338,7 @@ if dp:
             "epic":"pc_gaming_start.png", "legendary":"pc_gaming_pro.png", "mythic":"pc_dream_top.png"
         }
         image = BASE_DIR / "pc_builds" / build_images.get(rarity, "pc_office_basic.png")
-        caption = "🖥️ <b>Твой собранный ПК</b>\\n" + "\\n".join(f"• {c['name']}" for c in parts)
+        caption = "🖥️ <b>Твой собранный ПК</b>\n" + "\n".join(f"• {c['name']}" for c in parts)
         if image.is_file():
             await message.answer_photo(FSInputFile(image), caption=caption)
         else:
@@ -423,11 +423,11 @@ if dp:
             conn.commit()
 
         caption = (
-            "🎁 <b>Тебе выпала карточка!</b>\\n\\n"
-            f"🖥️ <b>{card['name']}</b>\\n"
-            f"✨ Редкость: <b>{rarity_label(card)}</b>\\n"
-            f"⚡ Мощность: {card['power']}\\n"
-            f"💰 Цена продажи: {card['price']} монет\\n"
+            "🎁 <b>Тебе выпала карточка!</b>\n\n"
+            f"🖥️ <b>{card['name']}</b>\n"
+            f"✨ Редкость: <b>{rarity_label(card)}</b>\n"
+            f"⚡ Мощность: {card['power']}\n"
+            f"💰 Цена продажи: {card['price']} монет\n"
             f"🆔 ID: <code>{card['id']}</code>"
         )
         markup = InlineKeyboardMarkup(inline_keyboard=[[
