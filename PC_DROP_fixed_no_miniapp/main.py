@@ -454,8 +454,8 @@ if dp:
 
     conn.commit()
 
-@dp.message(Command("inventory"))
-async def inventory_command(message: Message):
+    @dp.message(Command("inventory"))
+    async def inventory_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
@@ -477,8 +477,8 @@ async def inventory_command(message: Message):
 
         await message.answer("\n".join(lines))
 
-    @dp.message(Command("sell"))
-    async def sell_command(message: Message):
+@dp.message(Command("sell"))
+async def sell_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
@@ -536,8 +536,8 @@ async def inventory_command(message: Message):
             f"💰 Получено: {card['price']} монет"
         )
 
-    @dp.message(Command("daily"))
-    async def daily_command(message: Message):
+@dp.message(Command("daily"))
+async def daily_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
