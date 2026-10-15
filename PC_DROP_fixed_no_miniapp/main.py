@@ -579,8 +579,8 @@ async def daily_command(message: Message):
             f"🎁 Ты получил {DAILY_REWARD} монет!"
         )
 
-    @dp.callback_query()
-    async def callback_router(callback: CallbackQuery):
+@dp.callback_query()
+async def callback_router(callback: CallbackQuery):
         data = callback.data or ""
         if data.startswith("menu:"):
             actions = {
