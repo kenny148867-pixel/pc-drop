@@ -304,9 +304,11 @@ def inventory_text(items):
         )
 
     if len(items) > 30:
-        lines.append(f"\nПоказаны первые 30 из {len(items)} предметов.")
+        lines.append(
+            f"\nПоказаны первые 30 из {len(items)} предметов."
+        )
 
-return "\n".join(lines)
+    return "\n".join(lines)
 
 async def send_card_photo(message: Message, card: dict, caption: str, reply_markup=None):
     image_path = card_image_path(card)
@@ -633,7 +635,8 @@ if dp:
             items = inventory(user_id)
 
             if not items:
-                await callback.message.answer("📦 Инвентарь пока пуст.")
+                await callback.message.answer("📦 Инвентарь пока пуст."
+                )
                 return
 
             lines = ["<b>📦 Твой инвентарь</b>\n"]
