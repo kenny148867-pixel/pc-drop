@@ -650,7 +650,7 @@ def is_admin(user_id: int) -> bool:
 def valid_promo_code(code: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9_-]{2,32}", code))
 
-if dp
+if dp:
     @dp.message(Command("promo_coins"))
     async def promo_coins_command(message: Message):
         user = message.from_user
