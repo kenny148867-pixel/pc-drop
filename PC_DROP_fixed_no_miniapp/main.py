@@ -10,7 +10,7 @@ from contextlib import closing
 import psycopg
 from psycopg.rows import dict_row
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, Command
@@ -241,6 +241,16 @@ def card_image_path(card):
     path = BASE_DIR / "cards" / filename
     return path if path.is_file() else None
 
+RARITY_LABELS = {
+    "common": "Обычная",
+    "unusual": "Необычная",
+    "rare": "Редкая",
+    "epic": "Эпическая",
+    "legendary": "Легендарная",
+    "mythic": "Мифическая",
+    "ultra_legendary": "Ультра-легендарная",
+}
+
 def rarity_label(card):
     return RARITY_LABELS.get(card.get("rarity", "common"), card.get("rarity", "common"))
 
@@ -447,12 +457,12 @@ if dp:
                 """, (user.id, card["id"], now))
                 
                 cur.execute("""
-            UPDATE users
-            SET last_drop = %s
-            WHERE user_id = %s
-        """, (now, user.id))
+                    UPDATE users
+                    SET last_drop = %s
+                    WHERE user_id = %s
+                """, (now, user.id))
 
-    conn.commit()
+            conn.commit()
 
     @dp.message(Command("inventory"))
     async def inventory_command(message: Message):
@@ -477,8 +487,8 @@ if dp:
 
         await message.answer("\n".join(lines))
 
-@dp.message(Command("sell"))
-async def sell_command(message: Message):
+    @dp.message(Command("sell"))
+    async def sell_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
@@ -536,8 +546,8 @@ async def sell_command(message: Message):
             f"💰 Получено: {card['price']} монет"
         )
 
-@dp.message(Command("daily"))
-async def daily_command(message: Message):
+    @dp.message(Command("daily"))
+    async def daily_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
@@ -579,8 +589,8 @@ async def daily_command(message: Message):
             f"🎁 Ты получил {DAILY_REWARD} монет!"
         )
 
-@dp.callback_query()
-async def callback_router(callback: CallbackQuery):
+    @dp.callback_query()
+    async def callback_router(callback: CallbackQuery):
         data = callback.data or ""
         if data.startswith("menu:"):
             actions = {
@@ -640,6 +650,7 @@ def is_admin(user_id: int) -> bool:
 def valid_promo_code(code: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9_-]{2,32}", code))
 
+if dp
     @dp.message(Command("promo_coins"))
     async def promo_coins_command(message: Message):
         user = message.from_user
