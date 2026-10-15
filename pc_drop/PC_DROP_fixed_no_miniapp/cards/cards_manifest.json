@@ -1,0 +1,401 @@
+[
+  {
+    "id": "gpu_gtx1070",
+    "name": "GeForce GTX 1070",
+    "category": "gpu",
+    "rarity": "rare",
+    "image": "gpu_gtx1070.png"
+  },
+  {
+    "id": "gpu_gtx1060",
+    "name": "GeForce GTX 1060",
+    "category": "gpu",
+    "rarity": "common",
+    "image": "gpu_gtx1060.png"
+  },
+  {
+    "id": "gpu_rtx4090",
+    "name": "GeForce RTX 4090",
+    "category": "gpu",
+    "rarity": "legendary",
+    "image": "gpu_rtx4090.png"
+  },
+  {
+    "id": "cpu_r5_5600",
+    "name": "Ryzen 5 5600",
+    "category": "cpu",
+    "rarity": "common",
+    "image": "cpu_r5_5600.png"
+  },
+  {
+    "id": "cpu_i5_13600k",
+    "name": "Core i5-13600K",
+    "category": "cpu",
+    "rarity": "rare",
+    "image": "cpu_i5_13600k.png"
+  },
+  {
+    "id": "cpu_ryzen9",
+    "name": "Ryzen 9 7950X",
+    "category": "cpu",
+    "rarity": "epic",
+    "image": "cpu_ryzen9.png"
+  },
+  {
+    "id": "mb_b550",
+    "name": "MSI B550 Tomahawk",
+    "category": "motherboard",
+    "rarity": "common",
+    "image": "mb_b550.png"
+  },
+  {
+    "id": "mb_x670e",
+    "name": "ASUS X670E Hero",
+    "category": "motherboard",
+    "rarity": "epic",
+    "image": "mb_x670e.png"
+  },
+  {
+    "id": "ram_ddr4",
+    "name": "DDR4 16 GB",
+    "category": "ram",
+    "rarity": "common",
+    "image": "ram_ddr4.png"
+  },
+  {
+    "id": "ram_ddr5",
+    "name": "DDR5 32 GB",
+    "category": "ram",
+    "rarity": "rare",
+    "image": "ram_ddr5.png"
+  },
+  {
+    "id": "ssd_1tb",
+    "name": "NVMe SSD 1 TB",
+    "category": "storage",
+    "rarity": "unusual",
+    "image": "ssd_1tb.png"
+  },
+  {
+    "id": "psu_850",
+    "name": "Блок питания 850 W Gold",
+    "category": "psu",
+    "rarity": "rare",
+    "image": "psu_850.png"
+  },
+  {
+    "id": "cooler_aio",
+    "name": "СЖО 360 мм",
+    "category": "cooler",
+    "rarity": "epic",
+    "image": "cooler_aio.png"
+  },
+  {
+    "id": "case_airflow",
+    "name": "Airflow Mid Tower",
+    "category": "case",
+    "rarity": "unusual",
+    "image": "case_airflow.png"
+  },
+  {
+    "id": "gpu_voodoo5",
+    "name": "3dfx Voodoo5 6000 (прототип)",
+    "category": "gpu",
+    "rarity": "mythic",
+    "image": "gpu_voodoo5.png"
+  },
+  {
+    "id": "gpu_geforce256",
+    "name": "NVIDIA GeForce 256",
+    "category": "gpu",
+    "rarity": "legendary",
+    "image": "gpu_geforce256.png"
+  },
+  {
+    "id": "gpu_gtx1050ti",
+    "name": "GTX 1050 Ti",
+    "category": "gpu",
+    "rarity": "common",
+    "image": "gpu_gtx1050ti.png"
+  },
+  {
+    "id": "storage_hdd1tb",
+    "name": "HDD 1TB",
+    "category": "storage",
+    "rarity": "common",
+    "image": "storage_hdd1tb.png"
+  },
+  {
+    "id": "ram_ddr4_8gb",
+    "name": "DDR4 8GB",
+    "category": "ram",
+    "rarity": "common",
+    "image": "ram_ddr4_8gb.png"
+  },
+  {
+    "id": "cpu_i3_10100f",
+    "name": "Intel Core i3-10100F",
+    "category": "cpu",
+    "rarity": "common",
+    "image": "cpu_i3_10100f.png"
+  },
+  {
+    "id": "gpu_gtx1660super",
+    "name": "GTX 1660 Super",
+    "category": "gpu",
+    "rarity": "rare",
+    "image": "gpu_gtx1660super.png"
+  },
+  {
+    "id": "storage_crucial_mx500",
+    "name": "Crucial MX500 500GB",
+    "category": "storage",
+    "rarity": "rare",
+    "image": "storage_crucial_mx500.png"
+  },
+  {
+    "id": "ram_ddr4_16gb_3200",
+    "name": "DDR4 16GB 3200MHz",
+    "category": "ram",
+    "rarity": "rare",
+    "image": "ram_ddr4_16gb_3200.png"
+  },
+  {
+    "id": "cpu_i5_10400f",
+    "name": "Intel Core i5-10400F",
+    "category": "cpu",
+    "rarity": "rare",
+    "image": "cpu_i5_10400f.png"
+  },
+  {
+    "id": "gpu_rtx2060",
+    "name": "RTX 2060",
+    "category": "gpu",
+    "rarity": "epic",
+    "image": "gpu_rtx2060.png"
+  },
+  {
+    "id": "storage_samsung970evo",
+    "name": "Samsung 970 EVO 1TB",
+    "category": "storage",
+    "rarity": "epic",
+    "image": "storage_samsung970evo.png"
+  },
+  {
+    "id": "ram_corsair_vengeance16",
+    "name": "Corsair Vengeance 16GB",
+    "category": "ram",
+    "rarity": "epic",
+    "image": "ram_corsair_vengeance16.png"
+  },
+  {
+    "id": "cpu_ryzen53600",
+    "name": "AMD Ryzen 5 3600",
+    "category": "cpu",
+    "rarity": "epic",
+    "image": "cpu_ryzen53600.png"
+  },
+  {
+    "id": "gpu_rtx3060",
+    "name": "RTX 3060",
+    "category": "gpu",
+    "rarity": "legendary",
+    "image": "gpu_rtx3060.png"
+  },
+  {
+    "id": "gpu_rtx3070",
+    "name": "RTX 3070",
+    "category": "gpu",
+    "rarity": "legendary",
+    "image": "gpu_rtx3070.png"
+  },
+  {
+    "id": "storage_wd_black_sn850",
+    "name": "WD Black SN850 1TB",
+    "category": "storage",
+    "rarity": "legendary",
+    "image": "storage_wd_black_sn850.png"
+  },
+  {
+    "id": "cpu_ryzen75800x",
+    "name": "AMD Ryzen 7 5800X",
+    "category": "cpu",
+    "rarity": "legendary",
+    "image": "cpu_ryzen75800x.png"
+  },
+  {
+    "id": "gpu_rtx3080",
+    "name": "RTX 3080",
+    "category": "gpu",
+    "rarity": "mythic",
+    "image": "gpu_rtx3080.png"
+  },
+  {
+    "id": "gpu_rtx3090",
+    "name": "RTX 3090",
+    "category": "gpu",
+    "rarity": "mythic",
+    "image": "gpu_rtx3090.png"
+  },
+  {
+    "id": "ram_gskill_tridentz_32",
+    "name": "G.Skill Trident Z Neo 32GB",
+    "category": "ram",
+    "rarity": "mythic",
+    "image": "ram_gskill_tridentz_32.png"
+  },
+  {
+    "id": "cpu_ryzen95900x",
+    "name": "AMD Ryzen 9 5900X",
+    "category": "cpu",
+    "rarity": "mythic",
+    "image": "cpu_ryzen95900x.png"
+  },
+  {
+    "id": "gpu_rx5500xt8",
+    "name": "RX 5500 XT 8GB",
+    "category": "gpu",
+    "rarity": "common",
+    "image": "gpu_rx5500xt8.png"
+  },
+  {
+    "id": "gpu_gtx1650",
+    "name": "GTX 1650",
+    "category": "gpu",
+    "rarity": "common",
+    "image": "gpu_gtx1650.png"
+  },
+  {
+    "id": "gpu_gtx1660",
+    "name": "GTX 1660",
+    "category": "gpu",
+    "rarity": "rare",
+    "image": "gpu_gtx1660.png"
+  },
+  {
+    "id": "gpu_rx5700xt",
+    "name": "RX 5700 XT",
+    "category": "gpu",
+    "rarity": "epic",
+    "image": "gpu_rx5700xt.png"
+  },
+  {
+    "id": "cpu_i7_10700k",
+    "name": "Intel Core i7-10700K",
+    "category": "cpu",
+    "rarity": "rare",
+    "image": "cpu_i7_10700k.png"
+  },
+  {
+    "id": "cpu_i9_11900k",
+    "name": "Intel Core i9-11900K",
+    "category": "cpu",
+    "rarity": "epic",
+    "image": "cpu_i9_11900k.png"
+  },
+  {
+    "id": "storage_samsung980pro",
+    "name": "Samsung 980 PRO 1TB",
+    "category": "storage",
+    "rarity": "rare",
+    "image": "storage_samsung980pro.png"
+  },
+  {
+    "id": "storage_kingston_nv2",
+    "name": "Kingston NV2 1TB",
+    "category": "storage",
+    "rarity": "common",
+    "image": "storage_kingston_nv2.png"
+  },
+  {
+    "id": "storage_seagate_barracuda2",
+    "name": "Seagate Barracuda 2TB",
+    "category": "storage",
+    "rarity": "common",
+    "image": "storage_seagate_barracuda2.png"
+  },
+  {
+    "id": "ram_adata_xpg16",
+    "name": "ADATA XPG 16GB",
+    "category": "ram",
+    "rarity": "epic",
+    "image": "ram_adata_xpg16.png"
+  },
+  {
+    "id": "ram_teamgroup_tforce16",
+    "name": "TeamGroup T-Force 16GB",
+    "category": "ram",
+    "rarity": "rare",
+    "image": "ram_teamgroup_tforce16.png"
+  },
+  {
+    "id": "mb_asus_tuf_b450",
+    "name": "ASUS TUF B450-PLUS",
+    "category": "motherboard",
+    "rarity": "rare",
+    "image": "mb_asus_tuf_b450.png"
+  },
+  {
+    "id": "mb_msi_b550a",
+    "name": "MSI B550-A PRO",
+    "category": "motherboard",
+    "rarity": "common",
+    "image": "mb_msi_b550a.png"
+  },
+  {
+    "id": "mb_gigabyte_z590",
+    "name": "Gigabyte Z590 AORUS ELITE",
+    "category": "motherboard",
+    "rarity": "epic",
+    "image": "mb_gigabyte_z590.png"
+  },
+  {
+    "id": "psu_corsair_rm650x",
+    "name": "Corsair RM650x 650W",
+    "category": "psu",
+    "rarity": "rare",
+    "image": "psu_corsair_rm650x.png"
+  },
+  {
+    "id": "psu_corsair_rm750",
+    "name": "Corsair RM750 750W",
+    "category": "psu",
+    "rarity": "epic",
+    "image": "psu_corsair_rm750.png"
+  },
+  {
+    "id": "cooler_deepcool_gammaxx",
+    "name": "DeepCool Gammaxx 400",
+    "category": "cooler",
+    "rarity": "common",
+    "image": "cooler_deepcool_gammaxx.png"
+  },
+  {
+    "id": "cooler_bequiet_purerock",
+    "name": "be quiet! Pure Rock 2",
+    "category": "cooler",
+    "rarity": "rare",
+    "image": "cooler_bequiet_purerock.png"
+  },
+  {
+    "id": "case_nzxt_h510",
+    "name": "NZXT H510",
+    "category": "case",
+    "rarity": "epic",
+    "image": "case_nzxt_h510.png"
+  },
+  {
+    "id": "case_aerocool_cylon",
+    "name": "AeroCool Cylon 4F",
+    "category": "case",
+    "rarity": "rare",
+    "image": "case_aerocool_cylon.png"
+  },
+  {
+    "id": "gpu_rx580_mined",
+    "name": "RX 580 8GB — МАЙНЕННАЯ",
+    "category": "gpu",
+    "rarity": "ultra_legendary",
+    "image": "gpu_rx580_mined.png"
+  }
+]
