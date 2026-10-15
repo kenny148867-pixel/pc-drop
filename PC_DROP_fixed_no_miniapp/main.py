@@ -284,6 +284,30 @@ def main_keyboard():
     builder.adjust(2, 2, 1, 1)
     return builder.as_markup()
 
+def inventory_keyboard(items):
+    builder = InlineKeyboardBuilder()
+    for item in items[:30]:
+        builder.button(
+            text=item["name"],
+            callback_data=f"invitem:{item['inventory_id']}",
+        )
+
+    builder.adjust(1)
+    return builder.as_markup()
+    
+def inventory_text(items):
+    lines = ["<b>📦 Твой инвентарь:</b>", ""]
+    
+    for item in items[:30]:
+        lines.append(
+            f"• {item['name']} — {rarity_label(item)}"
+        )
+
+    if len(items) > 30:
+        lines.append(f"\nПоказаны первые 30 из {len(items)} предметов.")
+
+return "\n".join(lines)
+
 async def send_card_photo(message: Message, card: dict, caption: str, reply_markup=None):
     image_path = card_image_path(card)
     if image_path:
@@ -472,20 +496,13 @@ if dp:
         items = inventory(user.id)
 
         if not items:
-            await message.answer("📦 Инвентарь пока пуст.")
+            await message.answer("📦 Твой инвентарь пока пуст.")
             return
 
-        lines = ["<b>📦 Твой инвентарь</b>\n"]
-
-        for item in items[:30]:
-            lines.append(
-                f"ID: <code>{item['inventory_id']}</code> — "
-                f"{item['name']} ({rarity_label(item)})"
-            )
-
-        lines.append("\nПродать карточку: /sell ID")
-
-        await message.answer("\n".join(lines))
+        await message.answer(
+            inventory_text(items),
+            reply_markup=inventory_keyboard(items),
+        )
 
     @dp.message(Command("sell"))
     async def sell_command(message: Message):
@@ -604,11 +621,172 @@ if dp:
                     f"Выбери команду в меню Telegram: <code>{command}</code>"
                 )
             return
+            
         if data == "showinventory":
             await callback.answer()
-            if callback.message:
-                await callback.message.answer("Открой меню команд Telegram и выбери /inventory.")
+
+            if not callback.from_user or not callback.message:
+                return
+
+            user_id = callback.from_user.id
+            ensure_user(user_id, callback.from_user.username or "")
+            items = inventory(user_id)
+
+            if not items:
+                await callback.message.answer("📦 Инвентарь пока пуст.")
+                return
+
+            lines = ["<b>📦 Твой инвентарь</b>\n"]
+
+            for item in items[:30]:
+                lines.append(
+                    f"ID: <code>{item['inventory_id']}</code> — "
+                    f"{item['name']} ({rarity_label(item)})"
+                )
+
+        lines.append("\nПродать карточку: /sell ID")
+
+        await callback.message.answer("\n".join(lines))
+        return
+
+        if data.startswith("invitem:"):
+            await callback.answer()
+
+            if not callback.from_user or not callback.message:
+                return
+
+            user_id = callback.from_user.id
+            inv_id = int(data.split(":", 1)[1])
+
+            with closing(db()) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT id, card_id, acquired_at
+                        FROM inventory
+                        WHERE id = %s AND user_id = %s
+                    """, (inv_id, user_id))
+                    item = cur.fetchone()
+
+            if not item:
+                await callback.message.answer(
+                    "❌ Этот предмет уже отсутствует в инвентаре."
+                )
+                return
+
+            card = CARD_MAP.get(item["card_id"])
+
+            if not card:
+                await callback.message.answer(
+                    "❌ Не удалось найти данные карточки."
+                )
+                return
+
+            caption = (
+                f"🖥️ <b>{card['name']}</b>\n\n"
+                f"✨ Редкость: <b>{rarity_label(card)}</b>\n"
+                f"⚡ Мощность: {card['power']}\n"
+                f"💰 Цена продажи: {card['price']} монет\n"
+                f"🆔 ID предмета: <code>{inv_id}</code>"
+            )
+
+            markup = InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(
+                    text="💰 Продать",
+                    callback_data=f"invsell:{inv_id}",
+                ),
+                InlineKeyboardButton(
+                    text="⬅️ Назад",
+                    callback_data="invback",
+                ),
+            ]])
+
+            image_path = card_image_path(card)
+
+            if image_path:
+                await callback.message.answer_photo(
+                    photo=FSInputFile(image_path),
+                    caption=caption,
+                    reply_markup=markup,
+                )
+            else:
+                await callback.message.answer(
+                    caption,
+                    reply_markup=markup,
+                )
             return
+
+        if data == "invback":
+            await callback.answer()
+
+            if not callback.from_user or not callback.message:
+                return
+
+            items = inventory(callback.from_user.id)
+
+            if not items:
+                await callback.message.answer(
+                    "📦 Твой инвентарь пока пуст."
+                )
+                return
+
+            await callback.message.answer(
+                inventory_text(items),
+                reply_markup=inventory_keyboard(items),
+            )
+            return
+
+        if data.startswith("invsell:"):
+            await callback.answer()
+
+            if not callback.from_user or not callback.message:
+                return
+
+            user_id = callback.from_user.id
+            inv_id = int(data.split(":", 1)[1])
+
+            with closing(db()) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        SELECT id, card_id
+                        FROM inventory
+                        WHERE id = %s AND user_id = %s
+                        FOR UPDATE
+                    """, (inv_id, user_id))
+                    item = cur.fetchone()
+
+                    if not item:
+                        await callback.message.answer(
+                            "❌ Этот предмет уже продан или отсутствует."
+                        )
+                        return
+
+                    card = CARD_MAP.get(item["card_id"])
+
+                    if not card:
+                        await callback.message.answer(
+                            "❌ Данные карточки не найдены."
+                        )
+                        return
+
+                    cur.execute("""
+                        DELETE FROM inventory
+                        WHERE id = %s AND user_id = %s
+                    """, (inv_id, user_id))
+
+                    cur.execute("""
+                        UPDATE users
+                        SET balance = balance + %s
+                        WHERE user_id = %s
+                    """, (card["price"], user_id))
+
+                conn.commit()
+
+            await callback.message.answer(
+                f"✅ Продано: <b>{card['name']}</b>\n"
+                f"💰 Получено: {card['price']} монет",
+            )
+            return
+        
         if data.startswith("sellcard:"):
             _, owner_s, card_id = data.split(":", 2)
             if not callback.from_user or str(callback.from_user.id) != owner_s:
