@@ -1,0 +1,7 @@
+{
+  "common": "pc_builds/pc_office_basic.png",
+  "rare": "pc_builds/pc_budget.png",
+  "epic": "pc_builds/pc_gaming_start.png",
+  "legendary": "pc_builds/pc_gaming_pro.png",
+  "mythic": "pc_builds/pc_dream_top.png"
+}
