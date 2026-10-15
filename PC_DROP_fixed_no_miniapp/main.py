@@ -646,12 +646,7 @@ if dp:
                     f"ID: <code>{item['inventory_id']}</code> — "
                     f"{item['name']} ({rarity_label(item)})"
                 )
-
-        lines.append("\nПродать карточку: /sell ID")
-
-        await callback.message.answer("\n".join(lines))
-        return
-
+                
         if data.startswith("invitem:"):
             await callback.answer()
 
