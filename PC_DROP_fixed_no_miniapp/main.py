@@ -634,11 +634,11 @@ async def callback_router(callback: CallbackQuery):
     # ПРОМОКОДЫ
     # -----------------------------------------------------
 
-    def is_admin(user_id: int) -> bool:
-        return user_id in ADMIN_IDS
+def is_admin(user_id: int) -> bool:
+    return user_id in ADMIN_IDS
 
-    def valid_promo_code(code: str) -> bool:
-        return bool(re.fullmatch(r"[A-Za-z0-9_-]{2,32}", code))
+def valid_promo_code(code: str) -> bool:
+    return bool(re.fullmatch(r"[A-Za-z0-9_-]{2,32}", code))
 
     @dp.message(Command("promo_coins"))
     async def promo_coins_command(message: Message):
