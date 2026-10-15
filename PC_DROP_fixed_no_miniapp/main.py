@@ -395,8 +395,7 @@ if dp:
         with closing(db()) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT
-                    last_drop
+                    SELECT last_drop
                     FROM users
                     WHERE user_id = %s
                     FOR UPDATE
@@ -418,11 +417,27 @@ if dp:
 
                 card = pick_card()
 
-                cur.execute("""
-                    UPDATE users
-                    SET last_drop = %s
-                    WHERE user_id = %s
-                """, (now, user.id))
+                caption = (
+                    "🎁 <b>Тебе выпала карточка!</b>\n\n"
+                    f"🖥 <b>{card['name']}</b>\n"
+                    f"✨ Редкость: <b>{rarity_label(card)}</b>\n"
+                    f"⚡️ Мощность: {card['power']}\n"
+                    f"💰 Цена продажи: {card['price']} монет\n"
+                    f"🆔 ID: <code>{card['id']}</code>"
+                )
+
+                markup = InlineKeyboardMarkup(inline_keyboard=[[
+                    InlineKeyboardButton(
+                        text="💰 Продать",
+                        callback_data=f"sellcard:{user.id}:{card['id']}"
+                    ),
+                    InlineKeyboardButton(
+                        text="📦 Инвентарь",
+                        callback_data="showinventory"
+                    ),
+                ]])
+
+                await send_card_photo(message, card, caption, markup)
 
                 cur.execute("""
                     INSERT INTO inventory (
@@ -430,25 +445,17 @@ if dp:
                     )
                     VALUES (%s, %s, %s)
                 """, (user.id, card["id"], now))
+                
+                cur.execute("""
+            UPDATE users
+            SET last_drop = %s
+            WHERE user_id = %s
+        """, (now, user.id))
 
-            conn.commit()
+    conn.commit()
 
-        caption = (
-            "🎁 <b>Тебе выпала карточка!</b>\n\n"
-            f"🖥️ <b>{card['name']}</b>\n"
-            f"✨ Редкость: <b>{rarity_label(card)}</b>\n"
-            f"⚡ Мощность: {card['power']}\n"
-            f"💰 Цена продажи: {card['price']} монет\n"
-            f"🆔 ID: <code>{card['id']}</code>"
-        )
-        markup = InlineKeyboardMarkup(inline_keyboard=[[
-            InlineKeyboardButton(text="💰 Продать", callback_data=f"sellcard:{user.id}:{card['id']}"),
-            InlineKeyboardButton(text="📦 Инвентарь", callback_data="showinventory"),
-        ]])
-        await send_card_photo(message, card, caption, markup)
-
-    @dp.message(Command("inventory"))
-    async def inventory_command(message: Message):
+@dp.message(Command("inventory"))
+async def inventory_command(message: Message):
         user = message.from_user
         ensure_user(user.id, user.username or "")
 
